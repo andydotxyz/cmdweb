@@ -13,12 +13,27 @@
 
 */
 
+var commands = new Object();
+function Command(description, func) {
+  this.description = description;
+  this.func = func;
+}
+Command.prototype.invoke=function cmdinvoke(term, line) {
+  if (this.func) {
+    this.func(term, line);
+  }
+}
+
+function registerCommand(name, desc, func) {
+  commands[name] = new Command(desc, func);
+}
+
 var term = new Array();
 var parser = new Parser();
-    // only accept double and single quotes as quote characters
-    parser.quoteChars = { "\"": true, "'": true };
-    // set "-" (minus) as the option character (same as default)
-    parser.optionChars = { "-": true };
+// only accept double and single quotes as quote characters
+parser.quoteChars = { "\"": true, "'": true };
+// set "-" (minus) as the option character (same as default)
+parser.optionChars = { "-": true };
 
 var helpPage=[
   '%+r CommandWeb Help %-r - use one of the following commands:',
@@ -32,11 +47,9 @@ var helpPage=[
   '  load <url>.... load the specified url (also \'location\')',
   '  reload ....... reload the current page (also \'refresh\')',
   '  google <topic> load a google search for the topic',
-  ' %+iIP commands%-i',
-  '  rdns <ip> .... lookup the reverse DNS entry for an IP address',
-  '  myip ......... show information about the current outgoing IP address',
-  '  whois [domain] load the whois page for the current (or specified) domain',
+  ' %+iOther commands%-i'
 ];
+
 
 function loadUrl(url) {
   if (url.indexOf('://') <= 0) {
@@ -150,7 +163,15 @@ function termHandler() {
   var line = this.lineBuffer;
   if (line != '') {
     if (line == 'exit') this.close()
-    else if (line == 'help') this.write(helpPage);
+    else if (line == 'help') {
+      this.write(helpPage);
+      this.newLine();
+
+      for (command in commands) {
+        this.write('  ' + commands[command].description);
+        this.newLine();
+      }
+    }
     else if (line == 'clear') this.clear();
     else if (line == 'new') termNew();
     else if (line=='switch') {
@@ -170,23 +191,25 @@ function termHandler() {
     }else if (line.substr(0,6) == 'google') {
       iframe = document.getElementById('webcontent');
       iframe.src = 'http://www.google.co.uk/#hl=en&q='+encodeURIComponent(line.substr(7));
-    }else if (line.substr(0,5) == 'whois') {
-      var domain = line.substr(5);
-      iframe = document.getElementById('webcontent');
-      if (!domain) domain = iframe.src;
-
-      iframe.src = 'http://whois.domaintools.com/'+encodeURIComponent(domain);
-    }else if (line.substr(0,4) == 'rdns') {
-      var ip = line.substr(4);
-      iframe = document.getElementById('webcontent');
-
-      iframe.src = 'http://my-addr.com/reverse-lookup-domain-hostname/free-reverse-ip-lookup-service/reverse_lookup.php?addr='+ip;
-    }else if (line.substr(0,4) == 'myip') {
-      iframe.src = 'http://my-addr.com/your-ip-and-city-country-isp-latitude-longitude/geo-ip-region-lookup/my_geo.php';
     }
 
     else {
-      this.type('Unknown command: '+line);
+      found = false;
+      for (command in commands) {
+        cmdlen = command.length;
+        if (line.substring(0, cmdlen + 1) == command + ' ') {
+          params = line.substring(cmdlen + 1);
+          commands[command].invoke(this, params);
+          found = true;
+        } else if (line == command ) {
+          commands[command].invoke(this, '');
+          found = true;
+        }
+      }
+
+      if (!found) {
+        this.type('Unknown command: '+line);
+      }
     }
 
   }
