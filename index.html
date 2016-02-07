@@ -11,9 +11,16 @@
     <link rel="stylesheet" type="text/css" href="cmdweb.css" />
   </head>
 
-  <body onload="cmdWebLoad()">
+  <body onload="cmdWebLoad();">
+    <div id="nojs" style="padding: 10pt;">
+      <h2>Javascript not enabled</h2>
+      <p>This site requires javascript.</p>
+    </div>
 
     <script language="JavaScript" type="text/javascript">
+      d = document.getElementById('nojs');
+      d.parentNode.removeChild(d);
+
       cmdWebRender("about.html");
     </script>
 
