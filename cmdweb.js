@@ -66,6 +66,7 @@ function termNew() {
     n++;
 
   termOpen(n);
+  termPosition(n, (n-1)*20, (n-1)*20);
 }
 
 function writeCookie() {
@@ -91,12 +92,7 @@ function readCookie() {
   for (var i = 0; i < terms.length - 1; i++) {
     termOpen(i+1);
     var parts = terms[i].split(':');
-
-    var termdiv='terminal'+(i+1);
-    var dragobject = (document.getElementById)? document.getElementById(termdiv):document.all[termdiv];
-
-    dragobject.style.left = parts[1]+'px';
-    dragobject.style.top = parts[2]+'px';
+    termPosition(i+1, parts[1], parts[2]);
   }
 
   writeCookie();
@@ -154,6 +150,14 @@ function termOpen(n) {
   }
   termBringToFront(n);
   writeCookie();
+}
+
+function termPosition(n, x, y) {
+  var termdiv='terminal'+n;
+  var dragobject = (document.getElementById)? document.getElementById(termdiv):document.all[termdiv];
+
+  dragobject.style.left = x+'px';
+  dragobject.style.top = y+'px';
 }
 
 function termHandler() {
@@ -214,6 +218,7 @@ function termHandler() {
 
   }
 
+  writeCookie();
   this.prompt();
 }
 
@@ -259,8 +264,6 @@ function termChromeShow(n) {
 
   if (obj) {
     obj.className = 'termShow';
-    TermGlobals.setElementXY(div, document.width - 558 - n*20,
-        document.height - 376 - n*20);
   }
 }
 
@@ -383,7 +386,7 @@ function cmdWebRender(url) {
   document.write('<div id="newTerm" onmousedown="termNew(); return false"><img src="corner.png" width="75" height="75" /></div>');
   document.write('<span id="cmdTermCredits">Powered by <a href="http://handyande.co.uk/cmdweb/" target="_blank">cmdweb</a> and <a href="http://www.masswerk.at/termlib/" target="_blank">termlib.js</a></span>');
 
-  document.write('<div id="terminalX" style="position:absolute; visibility: hidden; z-index:1" class="termHidden">');
+  document.write('<div id="terminalX" style="top: 0; left:0; position:absolute; visibility: hidden; z-index:1" class="termHidden">');
   document.write('  <table class="termOuterChrome" onmouseup="termBringToFront(X)" cellpadding="1" cellspacing="0">');
   document.write('    <tr>');
   document.write('      <td class="termHeaderActive" onmousedown="dragTerm(X); return false" id="termHeaderX">');
